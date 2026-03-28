@@ -24,7 +24,7 @@ Messages rotate randomly every day — you never know which one you'll get.
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/sunset-notifier.git
+git clone https://github.com/zhangyuyi99/sunset-notifier.git
 cd sunset-notifier
 ```
 
