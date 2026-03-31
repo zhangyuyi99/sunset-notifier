@@ -9,12 +9,29 @@ MAIN_PY = os.path.join(SCRIPT_DIR, "main.py")
 PYTHON_EXE = sys.executable
 
 
+def _pythonw_exe() -> str:
+    """Return path to pythonw.exe on Windows (no console window)."""
+    # sys.executable is typically C:\...\python.exe; swap the binary name.
+    exe_dir = os.path.dirname(sys.executable)
+    pythonw = os.path.join(exe_dir, "pythonw.exe")
+    if os.path.isfile(pythonw):
+        return pythonw
+    # Fallback: replace trailing 'python.exe' in the path string.
+    if sys.executable.lower().endswith("python.exe"):
+        candidate = sys.executable[:-10] + "pythonw.exe"
+        if os.path.isfile(candidate):
+            return candidate
+    # Last resort: rely on PATH.
+    return "pythonw.exe"
+
+
 def install_windows():
     task_name = "SunsetNotifier"
+    pythonw = _pythonw_exe()
     cmd = [
         "schtasks", "/create",
         "/tn", task_name,
-        "/tr", f'"{PYTHON_EXE}" "{MAIN_PY}"',
+        "/tr", f'"{pythonw}" "{MAIN_PY}"',
         "/sc", "onlogon",
         "/rl", "limited",
         "/f",  # overwrite if exists
@@ -23,7 +40,8 @@ def install_windows():
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode == 0:
             print(f"✓ Task Scheduler entry '{task_name}' created.")
-            print(f"  main.py will run automatically at each login.")
+            print(f"  Executable: {pythonw}")
+            print(f"  main.py will run automatically at each login (no terminal window).")
         else:
             print(f"✗ Failed to create Task Scheduler entry.")
             print(result.stderr.strip())

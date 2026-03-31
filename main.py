@@ -17,7 +17,24 @@ if __name__ == "__main__":
         action="store_true",
         help="Print timezone/sunset diagnostics and exit",
     )
+    parser.add_argument(
+        "--test",
+        action="store_true",
+        help="Send a test notification immediately and exit",
+    )
     args = parser.parse_args()
+
+    if args.test:
+        from notifier.notify import send_notification, play_sound, pick_message
+        sound_path = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "chime.wav"))
+        message = pick_message(config.LANGUAGE)
+        title = "Test notification — sunset notifier is working"
+        print(f"Sending test notification...")
+        send_notification(title, message)
+        if getattr(config, "NOTIFICATION_SOUND", True):
+            play_sound(sound_path)
+        print("Done.")
+        sys.exit(0)
 
     if args.debug:
         from notifier.sunset import get_sunset_time, get_location_tz

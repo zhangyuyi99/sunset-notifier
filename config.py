@@ -4,13 +4,16 @@ LONGITUDE = -117.2575702
 
 # Which days to send reminders
 # Options: "weekdays", "everyday", or a list like ["mon","tue","wed","thu","fri","sat"]
-REMIND_DAYS = 'weekdays'
+REMIND_DAYS = 'everyday'
 
 # How many minutes before sunset to notify
 MINUTES_BEFORE = 5
 
 # Notification language: "en" or "zh"
 LANGUAGE = "zh"
+
+# Play a chime sound when the notification fires
+NOTIFICATION_SOUND = True
 
 # Notification title and message templates
 # Use {sunset_time} and {minutes} as placeholders

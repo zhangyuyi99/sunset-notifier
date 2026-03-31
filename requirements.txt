@@ -2,3 +2,4 @@ ephem
 plyer
 geopy
 timezonefinder
+winotify; sys_platform == "win32"

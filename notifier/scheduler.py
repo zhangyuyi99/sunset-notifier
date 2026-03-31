@@ -86,7 +86,8 @@ def run_loop(config) -> None:
                 )
 
             send_notification(title, message)
-            play_sound(sound_path)
+            if getattr(config, "NOTIFICATION_SOUND", True):
+                play_sound(sound_path)
         else:
             logger.info("Sunset trigger already passed today (%.0f s ago). Skipping.", -secs)
 

@@ -13,8 +13,104 @@ def prompt(text: str, default: str = "") -> str:
     return input(f"{text}: ").strip()
 
 
+def _eval_marker(marker: str) -> bool:
+    """Evaluate a simple PEP 508 environment marker (e.g. sys_platform == 'win32')."""
+    import platform
+    env = {
+        "sys_platform": sys.platform,
+        "platform_system": platform.system().lower(),
+        "python_version": ".".join(str(v) for v in sys.version_info[:2]),
+        "os_name": os.name,
+    }
+    try:
+        return bool(eval(marker, {"__builtins__": {}}, env))
+    except Exception:
+        return True  # if unparseable, assume the package applies
+
+
+def _check_dependencies() -> None:
+    """Read requirements.txt, find missing packages, and offer to install them."""
+    import importlib.metadata
+    import re
+    import subprocess
+
+    req_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "requirements.txt")
+    if not os.path.isfile(req_path):
+        return
+
+    # Parse requirements, respecting platform markers
+    required = []
+    with open(req_path, encoding="utf-8") as f:
+        for raw_line in f:
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if ";" in line:
+                pkg_part, marker = line.split(";", 1)
+                if not _eval_marker(marker.strip()):
+                    continue  # not applicable on this platform
+            else:
+                pkg_part = line
+            # Strip version specifiers: requests>=2.0 → requests
+            pkg_name = re.split(r"[><=!~\s]", pkg_part.strip())[0]
+            if pkg_name:
+                required.append(pkg_name)
+
+    # Find which are missing
+    missing = []
+    for pkg in required:
+        try:
+            importlib.metadata.version(pkg)
+        except importlib.metadata.PackageNotFoundError:
+            missing.append(pkg)
+
+    if not missing:
+        print("✓ All dependencies already installed.\n")
+        return
+
+    print("The following packages need to be installed:")
+    for pkg in missing:
+        print(f"  - {pkg}")
+    print()
+
+    answer = prompt("Install them now? (yes / no)", "yes").lower()
+    print()
+    if answer not in ("y", "yes"):
+        print("  ⚠ Warning: the app may not work correctly without these packages.")
+        print("  To install manually, run:")
+        print("    pip install -r requirements.txt")
+        print()
+        return
+
+    all_ok = True
+    for pkg in missing:
+        print(f"  Installing {pkg}...", end="", flush=True)
+        result = subprocess.run(
+            [sys.executable, "-m", "pip", "install", pkg],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0:
+            print(" ✓")
+        else:
+            print(" ✗")
+            # Show just the last non-empty line of stderr for brevity
+            error_lines = [l for l in result.stderr.splitlines() if l.strip()]
+            if error_lines:
+                print(f"    {error_lines[-1]}")
+            all_ok = False
+    print()
+    if not all_ok:
+        print("  ⚠ Some packages failed to install. The app may not work correctly.")
+        print("  Try running:  pip install -r requirements.txt")
+        print()
+
+
 def main():
     print("=== Sunset Notifier Setup ===\n")
+
+    # Step 0 — Dependencies
+    _check_dependencies()
 
     # Step 1 — Location
     print("Step 1 — Location")
@@ -71,7 +167,13 @@ def main():
     language = "zh" if lang_choice == "2" else "en"
     print()
 
-    # Step 5 — Preview
+    # Step 5 — Sound
+    print("Step 5 — Sound")
+    sound_raw = prompt("Play a sound with the notification? (yes / no)", "yes").lower()
+    notification_sound = sound_raw in ("y", "yes")
+    print()
+
+    # Step 6 — Preview
     import datetime
     # Use a fixed example sunset time for preview
     example_sunset = "19:23"
@@ -111,6 +213,9 @@ MINUTES_BEFORE = {minutes_before}
 
 # Notification language: "en" or "zh"
 LANGUAGE = "{language}"
+
+# Play a chime sound when the notification fires
+NOTIFICATION_SOUND = {notification_sound}
 
 # Notification title and message templates
 # Use {{sunset_time}} and {{minutes}} as placeholders
