@@ -45,7 +45,7 @@ def _sleep_until_tomorrow_midnight(tz: ZoneInfo) -> None:
 def run_loop(config) -> None:
     """Main scheduler loop. Runs forever, sending a notification each eligible day."""
     from notifier.sunset import get_sunset_time, get_location_tz
-    from notifier.notify import send_notification, play_sound, pick_message
+    from notifier.notify import send_notification, play_sound, pick_message, get_weather_comment
     import os
 
     sound_path = os.path.join(os.path.dirname(__file__), "..", "assets", "chime.wav")
@@ -74,6 +74,9 @@ def run_loop(config) -> None:
             time.sleep(secs)
 
             message = pick_message(config.LANGUAGE)
+            weather = get_weather_comment(config.LATITUDE, config.LONGITUDE, config.LANGUAGE)
+            if weather:
+                message = f"{message}\n{weather}"
             if config.LANGUAGE == "zh":
                 title = config.NOTIFY_TITLE_ZH.format(
                     sunset_time=sunset.strftime("%H:%M"),

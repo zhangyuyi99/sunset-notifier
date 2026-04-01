@@ -3,6 +3,11 @@ import platform
 import random
 import subprocess
 
+try:
+    import requests as _requests
+except ImportError:
+    _requests = None
+
 logger = logging.getLogger(__name__)
 
 APP_NAME = "🐸 Sunset Notifier"
@@ -78,3 +83,39 @@ def pick_message(language: str) -> str:
     if language == "zh":
         return random.choice(MESSAGES_ZH)
     return random.choice(MESSAGES_EN)
+
+
+def get_weather_comment(latitude: float, longitude: float, language: str) -> str:
+    """Fetch cloud cover from Open-Meteo and return a short weather comment.
+
+    Returns an empty string if the request fails for any reason.
+    """
+    if _requests is None:
+        return ""
+    try:
+        url = (
+            "https://api.open-meteo.com/v1/forecast"
+            f"?latitude={latitude}&longitude={longitude}"
+            "&current=cloudcover,weathercode"
+        )
+        resp = _requests.get(url, timeout=5)
+        resp.raise_for_status()
+        cloudcover = resp.json()["current"]["cloudcover"]
+
+        if language == "zh":
+            if cloudcover <= 30:
+                return "☀️ 今天是晴天，绝对值得去看！"
+            elif cloudcover <= 70:
+                return "⛅ 今天有些云，可能有不错的晚霞"
+            else:
+                return "☁️ 今天云比较多，但说不定有惊喜"
+        else:
+            if cloudcover <= 30:
+                return "☀️ Clear skies — definitely worth watching!"
+            elif cloudcover <= 70:
+                return "⛅ Partly cloudy — might get some nice colors"
+            else:
+                return "☁️ Pretty cloudy today — but you never know!"
+    except Exception as e:
+        logger.debug("Weather fetch failed (skipping): %s", e)
+        return ""

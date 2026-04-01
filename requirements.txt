@@ -2,4 +2,5 @@ ephem
 plyer
 geopy
 timezonefinder
+requests
 winotify; sys_platform == "win32"

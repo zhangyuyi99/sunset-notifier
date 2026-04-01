@@ -4,7 +4,7 @@ LONGITUDE = -117.2575702
 
 # Which days to send reminders
 # Options: "weekdays", "everyday", or a list like ["mon","tue","wed","thu","fri","sat"]
-REMIND_DAYS = 'everyday'
+REMIND_DAYS = 'weekdays'
 
 # How many minutes before sunset to notify
 MINUTES_BEFORE = 5
