@@ -2,7 +2,7 @@
 
 A tiny background script that reminds you to go watch the sunset.
 
-Runs on Windows, macOS, and Linux. No internet required. No API key. Completely free.
+Runs on Windows, macOS, and Linux. No API key. Completely free.
 
 ---
 
@@ -10,12 +10,19 @@ Runs on Windows, macOS, and Linux. No internet required. No API key. Completely 
 
 Every day, a few minutes before sunset, your desktop shows a notification like:
 
-> 🐸 Sunset in 5 min — 19:23
+> 🐸 小青蛙提醒你 — 19:23
 > 今天的日落是限定款，先到先得！
+> ⛅ 今天有些云，可能有不错的晚霞
 
-With a soft chime. Then it goes back to sleep until tomorrow.
+Messages rotate randomly every day — you never know which one you'll get. The notification also includes a real-time **weather comment** based on current cloud cover, so you know whether it's worth heading outside.
 
-Messages rotate randomly every day — you never know which one you'll get.
+---
+
+## Requirements
+
+- **Python 3.8+** — [download here](https://www.python.org/downloads/)
+- Works on Windows, macOS, and Linux
+- No API keys, no accounts, no subscriptions
 
 ---
 
@@ -28,18 +35,19 @@ git clone https://github.com/zhangyuyi99/sunset-notifier.git
 cd sunset-notifier
 ```
 
-### 2. Install and configure
+### 2. Configure
 
 ```bash
-pip install -r requirements.txt
 python setup.py
 ```
 
-`setup.py` will ask you:
+`setup.py` will automatically install any missing dependencies, then ask you:
+
 - Your location (city name or latitude/longitude)
 - Which days to remind you (weekdays / every day / custom)
 - How many minutes before sunset
 - Notification language (English / 中文)
+- Whether to play a chime sound with the notification
 
 ### 3. Start
 
@@ -77,6 +85,7 @@ LONGITUDE = -117.2713
 REMIND_DAYS = "weekdays"  # "weekdays", "everyday", or ["mon","wed","fri"]
 MINUTES_BEFORE = 5        # How many minutes before sunset
 LANGUAGE = "zh"           # "en" or "zh"
+NOTIFICATION_SOUND = True # Set to False to disable the chime
 ```
 
 Want to add your own messages? Edit `MESSAGES_EN` or `MESSAGES_ZH` in `config.py` —
@@ -84,12 +93,23 @@ one message is picked randomly each day.
 
 ---
 
-## Requirements
+## Features
 
-- Python 3.8+
-- Works on Windows, macOS, Linux
-- No internet connection needed at runtime
-- No API keys, no accounts, no subscriptions
+- **Weather-aware notifications** — fetches live cloud cover from [Open-Meteo](https://open-meteo.com/) (free, no API key) and appends a comment like "Clear skies — definitely worth watching!" to each notification. Fails gracefully if there's no internet.
+- **Optional chime sound** — plays a soft `.wav` chime when the notification fires. Can be disabled via `NOTIFICATION_SOUND = False` in `config.py` or during setup.
+- **Auto-installs dependencies** — `setup.py` detects missing packages and offers to install them for you.
+- **Bilingual** — all notifications and weather comments are available in English and Chinese (中文).
+- **Flexible schedule** — weekdays only, every day, or a custom list of days.
+
+---
+
+## Command-line flags
+
+```bash
+python main.py --test           # Send a test notification immediately and exit
+python main.py --test-weather   # Fetch weather, print diagnostics, send a test notification, and exit
+python main.py --debug          # Print timezone/sunset diagnostics and exit
+```
 
 ---
 
@@ -109,6 +129,9 @@ one message is picked randomly each day.
 
 **Sound doesn't play on Linux**
 - Install `alsa-utils`: `sudo apt install alsa-utils`
+
+**Weather comment doesn't appear**
+- The weather fetch is best-effort — if it fails (e.g. no internet), the notification still fires without it
 
 ---
 
